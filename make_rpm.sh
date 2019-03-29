@@ -116,7 +116,7 @@ function prepare_build_folder()
         fi
         # create RPM build folders 
         echo "Create directories {SOURCES,SPECS} in ${current_build_root}."
-        ${sb2_command} mkdir ${current_build_root}/{SOURCES,SPECS}
+        ${sb2_command} mkdir -p "${current_build_root}"/{SOURCES,SPECS}
     done
 }
 
