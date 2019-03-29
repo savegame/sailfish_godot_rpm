@@ -36,6 +36,7 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/%{name}
 
 
+
 %files
 %defattr(-,root,root,-)
 %{_bindir}

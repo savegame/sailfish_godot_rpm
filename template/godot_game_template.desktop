@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-X-Nemo-Application-Type=sdl2
+X-Nemo-Application-Type=sdl2git 
 Icon=$application_name$
 Exec=$application_name$
 Name=$application_name$
