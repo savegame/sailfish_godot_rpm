@@ -2,7 +2,7 @@
 # first define some parameters
 
 _app_name="godot_game"
-_app_icon="logo.png"
+_app_icon="godot_game_template.png"
 _mer_sdk_ip="localhost"
 _mer_sdk_port="2222"
 
@@ -46,3 +46,22 @@ rm -fr %RPM_BUILD_ROOT
 * Tue Feb 12 2019 $app_name$
 - создан spec для $app_name$
 EOF
+
+function parse_args() 
+{
+    local argc=0
+
+    while [ $# -gt 0 ] ; do	
+        ((argc++))
+        case "$1" in
+        * )
+            echo "Unknown parameter $argc: "$1
+        ;;
+		esac
+        shift
+    done
+    return 0
+}
+
+parse_args $@
+exit $?
