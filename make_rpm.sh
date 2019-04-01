@@ -7,6 +7,8 @@ _app_icon="godot_game_template.png"
 _mer_sdk_ip="localhost"
 _mer_sdk_port="2222"
 _mer_target=""
+_pck_file=""
+_godot_binary=""
 
 IFS='' read -r -d '' spec_file_data <<"EOF"
 #Hello world
@@ -60,12 +62,30 @@ function parse_args()
             shift
             _mer_target=$1
         ;;
+        "-pck" | "--pck" )
+            shift
+            _pck_file="$1"
+        ;;
+        "-g" | "--godot" )
+            shift 
+            _godot_binary="$1"
+        ;;
         * )
             echo "Unknown parameter $argc: "$1
         ;;
 		esac
         shift
     done
+    return 0
+}
+
+function check_args()
+{
+    if [ -z $_pck_file ] ; then 
+        echo "You should set path to pck file by --pck <path>"
+        return 1
+    fi
+
     return 0
 }
 
@@ -115,11 +135,15 @@ function prepare_build_folder()
             ${sb2_command} rm -fr ${current_build_root}
         fi
         # create RPM build folders 
-        echo "Create directories {SOURCES,SPECS} in ${current_build_root}."
-        ${sb2_command} mkdir -p "${current_build_root}"/{SOURCES,SPECS}
+        echo "Create directories {SOURCES,BUILD,SPECS} in ${current_build_root}."
+        ${sb2_command} mkdir -p "${current_build_root}"/{SOURCES,BUILD,SPECS}
+        # copy game resources
+
     done
 }
 
 parse_args $@
+check_args
+[ $? -ne 0 ] && exit 1
 prepare_build_folder
 exit $?
