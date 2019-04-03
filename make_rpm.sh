@@ -98,6 +98,10 @@ function parse_args()
             shift 
             _app_long_name="$1"
         ;;
+        "-v" | "--version" )
+            shift 
+            _version="$1"
+        ;;
         * )
             echo "Unknown parameter $argc: $1"
         ;;
