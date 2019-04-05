@@ -11,12 +11,13 @@ _mer_target=""
 _pck_file=""
 _godot_binary=""
 _version="1.0.0"
+_release="1"
 
 IFS='' read -r -d '' spec_file_data <<"EOF"
 Name:       $application_name$
 Summary:    $application_long_name$
 Version:    $version$
-Release:    1
+Release:    $release$
 Group:      Godot
 License:    LICENSE
 URL:        http://example.org/
@@ -47,10 +48,11 @@ mkdir -p %{buildroot}
 cp -r %{_topdir}/BUILD/usr %{buildroot}/
 
 %files
-%defattr(-,root,root,-)
-%{_bindir}
-%{_datadir}/%{name}
-%{_datadir}/applications/%{name}.desktop
+%defattr(644,root,root,-)
+%attr(755,root,root) %{_bindir}/%{name}
+%attr(644,root,root) %{_datadir}/%{name}/%{name}.png
+%attr(644,root,root) %{_datadir}/%{name}/%{name}.pck
+%attr(644,root,root) %{_datadir}/applications/%{name}.desktop
 
 %changelog 
 * $date$ Godot Game Engine
@@ -60,12 +62,13 @@ EOF
 IFS='' read -r -d '' desktop_file_data <<"EOF"
 [Desktop Entry]
 Type=Application
-X-Nemo-Application-Type=sdl2
+X-Nemo-Application-Type=silica-qt5
 Icon=/usr/share/$application_name$/$application_name$.png
 Exec=/usr/bin/$application_name$ --main-pack /usr/share/$application_name$/$application_name$.pck
 Name=$application_long_name$
 Name[en]=$application_long_name$
 EOF
+
 
 function parse_args() 
 {
@@ -101,6 +104,10 @@ function parse_args()
         "-v" | "--version" )
             shift 
             _version="$1"
+        ;;
+        "-r" | "--release" )
+            shift
+            _release="$1"
         ;;
         * )
             echo "Unknown parameter $argc: $1"
@@ -205,10 +212,7 @@ function prepare_build_folder()
         local spec_file_path="${current_build_root}/SPECS/${_app_name}.spec"
 
         echo "Generate ${_app_name}.spec file."
-        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$date\\\$~${current_date}~g">"${spec_file_path}"
-
-        #echo "Create empty ${_app_name}.tar.gz archive"
-        #touch "${current_build_root}/SOURCES/${_app_name}.tar.gz"
+        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g">"${spec_file_path}"
 
         echo "Pack all data to RPM file."
         ${sb2_command} rpmbuild --define  "_topdir ${current_build_root}" -ba "${current_build_root}/SPECS/${_app_name}.spec" &>"${_pwd}/rpmbuild_${_app_name}.log"
