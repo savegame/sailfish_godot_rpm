@@ -62,13 +62,29 @@ EOF
 IFS='' read -r -d '' desktop_file_data <<"EOF"
 [Desktop Entry]
 Type=Application
-X-Nemo-Application-Type=silica-qt5
+X-Nemo-Application-Type=SDL2
 Icon=/usr/share/$application_name$/$application_name$.png
 Exec=/usr/bin/$application_name$ --main-pack /usr/share/$application_name$/$application_name$.pck
 Name=$application_long_name$
 Name[en]=$application_long_name$
 EOF
 
+IFS='' read -r -d '' help_data <<"EOF"
+Make RPM script v 1.0.1
+    -pck/--pck      <path>      path to  *.pck game archive (need export project to pck)
+    -g/--godot      <path>      path to spicific for target platform godot binary (arm or x86)
+    -icon/--icon    <path>      path to icon PNG file
+    -n/--name       <string>    rpm name (should be without spaces or any special symbols) 
+                                mathes: [a-z_\-0-9\.]+
+    -ln/--long-name <string>    Game name, its would be show in Apps Menu 
+    -v/--version    <string>    application version (1.0.0 default)
+    -r/--release    <string>    application release number (1 by default)
+EOF
+
+function print_help() 
+{
+    echo "$help_data"
+}
 
 function parse_args() 
 {
@@ -120,19 +136,20 @@ function parse_args()
 
 function check_args()
 {
+    local error_=0
     if [ -z $_pck_file ] ; then 
         echo "You should set path to pck file by --pck <path>"
-        return 1
+        error_=1
     fi
 
     if [ -z $_godot_binary ] ; then 
         echo "You should set path to godot export template binary by -g/--godot <path>"
-        return 1
+        error_=1
     fi
 
     if [ -z $_app_icon ] ; then 
         echo "You should set path to game icon file by --icon <path> (PNG file)"
-        return 1
+        error_=1
     fi
 
     if [ -z $_app_long_name ] ; then
@@ -140,7 +157,9 @@ function check_args()
         _app_long_name="${_app_name}"
     fi
 
-    return 0
+    [ $error_ -ne 0 ] && print_help || echo -n ""
+
+    return $error_
 }
 
 function check_mer_target() 
