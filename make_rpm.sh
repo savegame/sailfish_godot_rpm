@@ -12,6 +12,8 @@ _pck_file=""
 _godot_binary=""
 _version="1.0.0"
 _release="1"
+_changelog=""
+_changelog_text=""
 
 IFS='' read -r -d '' spec_file_data <<"EOF"
 Name:       $application_name$
@@ -57,6 +59,7 @@ cp -r %{_topdir}/BUILD/usr %{buildroot}/
 %changelog 
 * $date$ Godot Game Engine
 - application $application_name$ packed to RPM
+$changelog$
 EOF
 
 IFS='' read -r -d '' desktop_file_data <<"EOF"
@@ -75,10 +78,11 @@ Make RPM script v 1.0.1
     -g/--godot      <path>      path to spicific for target platform godot binary (arm or x86)
     -icon/--icon    <path>      path to icon PNG file
     -n/--name       <string>    rpm name (should be without spaces or any special symbols) 
-                                mathes: [a-z_\-0-9\.]+
+                                matches: [a-z_\-0-9\.]+
     -ln/--long-name <string>    Game name, its would be show in Apps Menu 
     -v/--version    <string>    application version (1.0.0 default)
     -r/--release    <string>    application release number (1 by default)
+    -c/--changelog  <path>      path to changelog text file (it add to end of spec)
 EOF
 
 function print_help() 
@@ -125,6 +129,10 @@ function parse_args()
             shift
             _release="$1"
         ;;
+        "-c" | "--changelog" )
+        	shift
+        	_changelog="$1"
+        ;;
         * )
             echo "Unknown parameter $argc: $1"
         ;;
@@ -152,7 +160,7 @@ function check_args()
         error_=1
     fi
 
-    if [ -z $_app_long_name ] ; then
+    if [ -z "$_app_long_name" ] ; then
         echo "You dont set Appliction Human Readable Name, set app_name"
         _app_long_name="${_app_name}"
     fi
@@ -223,6 +231,10 @@ function prepare_build_folder()
         [ $? -ne 0 ] && return 1
         rsync -aP $_pck_file "${current_build_root}"/BUILD/usr/share/$_app_name/$_app_name.pck
         [ $? -ne 0 ] && return 1
+        # right path for icon is 
+        # /usr/share/icons/hicolor/[0-9x]{5,9}/apps/${_app_name}.png
+        # echo -n "Icon folder: "
+        # LC_ALL=en_US.UTF-8 exiv2 $_app_icon | grep Image\ size|sed -e "s~Image size \+: \+~~g" -e "s~ ~~g"
         rsync -aP $_app_icon "${current_build_root}"/BUILD/usr/share/$_app_name/$_app_name.png
         [ $? -ne 0 ] && return 1
         
@@ -231,7 +243,10 @@ function prepare_build_folder()
         local spec_file_path="${current_build_root}/SPECS/${_app_name}.spec"
 
         echo "Generate ${_app_name}.spec file."
-        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g">"${spec_file_path}"
+        if [ -f $_changelog ] ; then
+        	_changelog_text="$(cat $_changelog)"
+        fi
+        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g" -e "s~\\\$changelog\\\$~${_changelog_text}~g">"${spec_file_path}"
 
         echo "Pack all data to RPM file."
         ${sb2_command} rpmbuild --define  "_topdir ${current_build_root}" -ba "${current_build_root}/SPECS/${_app_name}.spec" &>"${_pwd}/rpmbuild_${_app_name}.log"
