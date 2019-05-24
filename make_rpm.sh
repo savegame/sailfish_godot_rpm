@@ -244,9 +244,15 @@ function prepare_build_folder()
 
         echo "Generate ${_app_name}.spec file."
         if [ -f $_changelog ] ; then
-        	_changelog_text="$(cat $_changelog)"
+        	#_changelog_text="$(cat $_changelog)"
+            while IFS='' read line
+            do
+               spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~${line} \n\$changelog\$~g")" 
+            done < $_changelog
+            spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~~g")"
         fi
-        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g" -e "s~\\\$changelog\\\$~${_changelog_text}~g">"${spec_file_path}"
+
+        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g" -e "s~\\\$changelog\\\$~'${_changelog_text}'~g">"${spec_file_path}"
 
         echo "Pack all data to RPM file."
         ${sb2_command} rpmbuild --define  "_topdir ${current_build_root}" -ba "${current_build_root}/SPECS/${_app_name}.spec" &>"${_pwd}/rpmbuild_${_app_name}.log"
