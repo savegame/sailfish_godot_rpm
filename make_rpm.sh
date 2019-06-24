@@ -29,8 +29,6 @@ Requires:   freetype
 Requires:   libpng
 Requires:   openssl
 Requires:   zlib
-Requires:   libvpx
-Requires:   libwebp
 Requires:   glib2
 Requires:   libaudioresource
 
