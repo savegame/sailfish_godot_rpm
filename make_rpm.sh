@@ -22,6 +22,7 @@ Version:    $version$
 Release:    $release$
 Group:      Godot
 License:    LICENSE
+BuildArch:  $architecture$
 URL:        http://example.org/
 #Source0:    %{name}.tar.xz
 Requires:   SDL2
@@ -31,6 +32,7 @@ Requires:   openssl
 Requires:   zlib
 Requires:   glib2
 Requires:   libaudioresource
+#Requires:   libkeepalive-glib
 
 %description
 This game made with Godot Game Engine! Godot Engine version 3.1
@@ -207,7 +209,8 @@ function prepare_build_folder()
     for current_target in ${_mer_target} ; do
         local current_build_root="${_pwd}/buildroot/$current_target"
         local sb2_command="sb2 -t $current_target "
-
+        local arch=`echo $_mer_target|sed -e 's~.*\(i486\|armv7hl\)~\1~g'`
+        echo "Use architecture: $arch"
         echo "Current target is \"$current_target\""
         # clear build folder 
         if [ -d ${current_build_root} ] ; then
@@ -250,10 +253,11 @@ function prepare_build_folder()
             spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~~g")"
         fi
 
-        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g" -e "s~\\\$changelog\\\$~'${_changelog_text}'~g">"${spec_file_path}"
+        echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g" -e "s~\\\$changelog\\\$~'${_changelog_text}'~g" -e "s~\\\$architecture\\\$~${arch}~g">"${spec_file_path}"
 
         echo "Pack all data to RPM file."
         ${sb2_command} rpmbuild --define  "_topdir ${current_build_root}" -ba "${current_build_root}/SPECS/${_app_name}.spec" &>"${_pwd}/rpmbuild_${_app_name}.log"
+        [ $? -ne 0 ] || echo "We have Error! Look in to ${_pwd}/rpmbuild_${_app_name}.log"
     done
 }
 
