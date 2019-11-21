@@ -73,7 +73,7 @@ Name[en]=$application_long_name$
 EOF
 
 IFS='' read -r -d '' help_data <<"EOF"
-Make RPM script v 1.0.1
+Make RPM script v 1.0.2
     -pck/--pck      <path>      path to  *.pck game archive (need export project to pck)
     -g/--godot      <path>      path to spicific for target platform godot binary (arm or x86)
     -icon/--icon    <path>      path to icon PNG file
