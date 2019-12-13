@@ -65,7 +65,7 @@ EOF
 IFS='' read -r -d '' desktop_file_data <<"EOF"
 [Desktop Entry]
 Type=Application
-X-Nemo-Application-Type=SDL2
+X-Nemo-Application-Type=SDL2 
 Icon=/usr/share/$application_name$/$application_name$.png
 Exec=/usr/bin/$application_name$ --main-pack /usr/share/$application_name$/$application_name$.pck
 Name=$application_long_name$
@@ -176,27 +176,57 @@ function check_mer_target()
     local option
     if [ -z "$_mer_target" ] ; then
         echo "Mer target is not setuped, please choose one: "
-        local target="`sb2-config -l`"
-        for target in $target ; do
-            eval option[${target_count}]=$target
-            ((target_count++))
+        local targets="`sb2-config -l`"
+        local binary_suffix=`echo "$_godot_binary"|sed -e "s~.*godot\.sailfish\.opt\.\(arm\|x86\)~\1~g"`
+
+        for target in $targets ; do
+            local target_suffix=`echo "$target"|sed -e "s~SailfishOS-[0-9\.]\+-\(armv7hl\|i486\)~\1~g"`
+            # echo "target_suffix = $target_suffix"
+            local add_this_target=1
+            if [ ! -z "$target_suffix" -a ! -z "$binary_suffix" ] ; then
+                add_this_target=0
+                if [ "$binary_suffix" == "arm" ] ; then
+                    if [ "$target_suffix" == "armv7hl" ] ; then
+                        add_this_target=1
+                    else 
+                        add_this_target=0
+                    fi
+                elif [ "$binary_suffix" == "x86" ] ; then
+                    if [ "$target_suffix" == "i486" ] ; then
+                        add_this_target=1
+                    else 
+                        add_this_target=0
+                    fi
+                else
+                    add_this_target=1
+                fi
+            fi
+            if [ $add_this_target -eq 1 ] ; then 
+                eval option[${target_count}]=$target
+                ((target_count++))
+            fi
         done
         # dont use all targets, bacuse we have only for one target binary
         # eval option[${target_count}]=\"All targets\"
         # ((target_count++))
-        select opt in "${option[@]}" ; do
-            if [ -z "$opt" ] ; then
-                echo "Invalid option $REPLY"
-            elif [[ $opt == "All targets" ]] ; then
-                echo "You choose all targets."
-                _mer_target="`sb2-config -l`"
-                break
-            else
-                echo "You  choose \"$opt\" target."
-                _mer_target=$opt
-                break
-            fi
-        done
+        if [ $target_count -eq 1 ] ; then
+            _mer_target="${option[0]}"
+            echo "Automatically choose \"$_mer_target\""
+        else
+            select opt in "${option[@]}" ; do
+                if [ -z "$opt" ] ; then
+                    echo "Invalid option $REPLY"
+                elif [[ $opt == "All targets" ]] ; then
+                    echo "You choose all targets."
+                    _mer_target="`sb2-config -l`"
+                    break
+                else
+                    echo "You  choose \"$opt\" target."
+                    _mer_target=$opt
+                    break
+                fi
+            done
+        fi
     fi
 }
 
