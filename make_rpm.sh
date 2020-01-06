@@ -274,20 +274,24 @@ function prepare_build_folder()
         local spec_file_path="${current_build_root}/SPECS/${_app_name}.spec"
 
         echo "Generate ${_app_name}.spec file."
-        if [ -f $_changelog ] ; then
-        	#_changelog_text="$(cat $_changelog)"
-            while IFS='' read line
-            do
-               spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~${line} \n\$changelog\$~g")" 
-            done < $_changelog
-            spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~~g")"
+        if [ -n "$_changelog" ] ; then
+            if [ -f $_changelog ] ; then
+                #_changelog_text="$(cat $_changelog)"
+                while IFS='' read line
+                do
+                spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~${line} \n\$changelog\$~g")" 
+                done < $_changelog
+                spec_file_data="$(echo "$spec_file_data"|sed -e "s~\\\$changelog\\\$~~g")"
+            fi
         fi
 
         echo "$spec_file_data"|sed -e "s~\\\$application_name\\\$~$_app_name~g" -e "s~\\\$application_long_name\\\$~$_app_long_name~g" -e "s~\\\$version\\\$~$_version~g" -e "s~\\\$release\\\$~$_release~g" -e "s~\\\$date\\\$~${current_date}~g" -e "s~\\\$changelog\\\$~'${_changelog_text}'~g" -e "s~\\\$architecture\\\$~${arch}~g">"${spec_file_path}"
 
         echo "Pack all data to RPM file."
-        ${sb2_command} rpmbuild --define  "_topdir ${current_build_root}" -ba "${current_build_root}/SPECS/${_app_name}.spec" &>"${_pwd}/rpmbuild_${_app_name}.log"
-        [ $? -ne 0 ] || echo "We have Error! Look in to ${_pwd}/rpmbuild_${_app_name}.log"
+        ${sb2_command} rpmbuild --define  "_topdir ${current_build_root}" -ba "${current_build_root}/SPECS/${_app_name}.spec" &> "${_pwd}/rpmbuild_${_app_name}.log"
+        if [ $? -ne 0 ] ; then
+            echo "We have Error! Look in to ${_pwd}/rpmbuild_${_app_name}.log"
+        fi
     done
 }
 
